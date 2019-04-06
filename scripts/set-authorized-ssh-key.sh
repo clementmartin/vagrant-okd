@@ -1,0 +1,8 @@
+#!/bin/bash
+
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+
+cat <<EOF > /root/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJu4l+yvco1yAxvuSXV+mjtNGpKTmr/Lb2KgxdWpRa1567VF+MH1iO1QV6F7sOuPv3lvsemtwJOPFGjeLKo+e7Xx9jb/RJGQyVDMBGzjx5Ao4FFw0CxiPqwRUR15eab2UfWV9SvIlvUTAFP6Opou3kwWtfdUOG4KvFToWaqyz0ra13v0snZ1TcG59Zv9G+CMojZUqXFT+uQAfQntqirfwSD4hDa8nh7ZScmqQeuU2hDPNmGkE31F4gFJaT/590tCAEkzHOMYkQ5x1F6Vt5MeYujmlgL2aNHjWTWyvuKZ3ew1oR7wwxV2M4lEb3RYavZh+WARTQNRbHzPfBcPyCSlP/ vagrant-okd-installer
+EOF
