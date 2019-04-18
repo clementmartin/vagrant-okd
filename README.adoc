@@ -50,11 +50,22 @@ By default, we deploy a number of VMs:
 === Storage setup
 
 By default, the `Vagrantfile` will deploy *3* infrastructure nodes with *3* extra disks of *150G*,
-you can override these defaults via the `OKD_EXTRA_DISKS_NUMBER` and `OKD_EXTRA_DISKS_SIZE` environment variables:
+you can override these defaults via the `OKD_INFRAS`, `OKD_MASTERS`, `OKD_NODES`,
+`OKD_EXTRA_DISKS_NUMBER`, `OKD_EXTRA_DISKS_SIZE` environment variables.
+
+For example:
 
 ```
 user@host $ OKD_EXTRA_DISKS_NUMBER=2 OKD_EXTRA_DISKS_SIZE=10G vagrant up
 ```
+
+Or export them:
+
+```
+user@host $ export OKD_NODES=2
+user@host $ vagrant up
+```
+
 Since we will launch *11* virtual machines by default, vagrant can struggle to
 provision them all in parallel (my machine has no SSD), so the recommended way
 to deploy the VMs is to begin with the `deploy` machine and then use the provided
@@ -64,6 +75,9 @@ to deploy the VMs is to begin with the `deploy` machine and then use the provide
 user@host $ vagrant up deploy
 user@host $ ./scripts/recycle-nodes.sh
 ```
+
+NOTE: Don't forget to export the environment variables if you use any non default setting.
+
 == OKD Deployment
 
 Everything is done on the `deploy` VM, it is defined as the _primary_ VM for vagrant so
