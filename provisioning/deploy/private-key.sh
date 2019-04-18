@@ -1,8 +1,8 @@
 #!/bin/bash
-mkdir -p /root/.ssh
-chmod 700 /root/.ssh
+mkdir -p $HOME/.ssh
+chmod 700 $HOME/.ssh
 
-cat <<EOF > /root/.ssh/id_rsa
+cat <<EOF > $HOME/.ssh/id_rsa
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEAybuJfsr3KNcgMb7kl1fpo7TRqSk5q/y29ioMXVqUWteeu1Rf
 jB9YjtUFehe7Drj795b7HprcCTjxRo3iyqPnu18fY2/0SRkMlQzARs48eQKOBRcN
@@ -32,4 +32,4 @@ flgMihvoIxeI9zW4IGJ/42J8W1UZ+OHLHLntRHzFsQwEuzH8Jql9goQnLhPm6WVG
 -----END RSA PRIVATE KEY-----
 EOF
 
-chmod 600 /root/.ssh/id_rsa
+chmod 600 $HOME/.ssh/id_rsa

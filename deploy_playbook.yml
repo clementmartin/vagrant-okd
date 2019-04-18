@@ -1,0 +1,28 @@
+---
+- hosts: deploy
+  tasks:
+    - name: Install packages
+      dnf:
+        state: present
+        name:
+          - vim-enahnced
+          - git
+          - ansible
+
+    - name: ensure permissions on ssh config dir
+      file:
+        path: /home/vagrant/.ssh
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: 0700
+
+
+    - name: Deploy ssh private key
+      copy:
+        src: keys/installer_rsa
+        dest: /home/vagrant/.ssh/id_rsa
+        owner: vagrant
+        group: vagrant
+        mode: 0600
+

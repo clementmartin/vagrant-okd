@@ -1,37 +1,66 @@
+# number of master nodes
+MASTERS = ENV.has_key?('OKD_MASTERS') ? ENV['OKD_MASTERS'].to_i - 1 : 2
+# number of infrastructure nodes
+INFRAS = ENV.has_key?('OKD_INFRAS') ? ENV['OKD_INFRAS'].to_i - 1 : 2
+# number of compute nodes
+NODES = ENV.has_key?('OKD_NODES') ? ENV['OKD_NODES'].to_i - 1 : 2
+# number of 'data' disks for infrastructure nodes
+DISKS_N = ENV.has_key?('OKD_EXTRA_DISKS_NUMBER') ? ENV['OKD_EXTRA_DISKS_NUMBER'].to_i : 3
+# size of each disk
+DISKS_S = ENV.has_key?('OKD_EXTRA_DISKS_SIZE') ? ENV['OKD_EXTRA_DISKS_SIZE'] : '150G'
+
+
 Vagrant.configure("2") do |config|
 
-  config.landrush.enabled = true
-  config.landrush.tld = 'okd.one'
-  config.landrush.upstream '127.0.0.53'
+  tld = 'okd.local'
+  config.vm.box = 'fedora/29-cloud-base'
+  config.vm.provision 'shell', path: 'provisioning/public-key.sh', privileged: false
+  config.vm.provider :libvirt do |lv|
+    lv.memory = 6144
+  end
 
-  config.vm.box = 'fedora/29-atomic-host'
-  config.vm.provision 'shell',
-    inline: "echo search #{config.landrush.tld} >> /etc/resolv.conf"
-
-  config.vm.define 'installer', primary: true do |installer|
-    installer.vm.provider :libvirt do |lv|
-      lv.memory = 1024
+  config.vm.define 'deploy', primary: true do |box|
+    box.vm.provider :libvirt do |lv|
+      lv.memory = 2048
     end
-    installer.vm.box = 'centos/7'
-    installer.vm.hostname = 'installer.okd.one'
-    installer.vm.provision 'shell', path: 'scripts/set-private-ssh-key.sh'
-    installer.vm.provision 'shell', path: 'scripts/installer-origin.sh'
+    box.vm.hostname = 'deploy.' + tld
+    box.vm.provision 'shell', path: 'provisioning/deploy/private-key.sh', privileged: false
+    box.vm.provision 'shell', path: 'provisioning/deploy/packages.sh'
+    box.vm.provision 'shell', path: 'provisioning/deploy/clone.sh', privileged: false
+    box.vm.provision 'shell', path: 'provisioning/deploy/inventory.sh', privileged: false
   end
 
-  config.vm.define 'master', primary: true do |master|
-    master.vm.hostname = 'master.okd.one'
-    master.vm.provision 'shell',
-      path: 'scripts/set-authorized-ssh-key.sh'
+  config.vm.define 'proxy' do |box|
+    box.vm.hostname = 'proxy.' + tld
+    box.vm.provider :libvirt do |lv|
+      lv.memory = 2048
+    end
   end
 
-[ 'infra', 'node' ].each do |box_type|
-    (0..1).each do |box_index|
-      box_name = box_type + '-' + box_index.to_s
-      config.vm.define box_name do |box|
-        box.vm.hostname = box_name + '.' + config.landrush.tld
-        box.vm.provision 'shell',
-          path: 'scripts/set-authorized-ssh-key.sh'
+  (0..MASTERS).each do |i|
+    box_name = 'master-' + i.to_s
+    config.vm.define box_name do |box|
+      box.vm.hostname = box_name + '.' + tld
+    end
+  end
+
+  (0..INFRAS).each do |i|
+    box_name = 'infra-' + i.to_s
+    config.vm.define box_name do |box|
+      box.vm.hostname = box_name + '.' + tld
+      box.vm.provider :libvirt do |lv|
+        DISKS_N.to_i.times do
+          lv.storage :file, :size => DISKS_S
+        end
       end
     end
   end
+
+  (0..NODES).each do |i|
+    box_name = 'node-' + i.to_s
+    config.vm.define box_name do |box|
+      box.vm.hostname = box_name + '.' + tld
+    end
+  end
+
 end

@@ -1,11 +1,82 @@
 = Vagrant OKD setup
-Clement Martin <onespan.com@onespan.com>
+Clement Martin <twisla@twis.la>
 v0.1
 :toc: left
 :numbered:
 :toclevels: 2
 :icons: font
+:okd_version: 3.11
+:okd_local_dns: okd.local
 
 == Introduction
 
-You'll need vagrant-landrush to use this project.
+Use this repo to setup a Vagrant based OpenShift Origin {okd_version} cluster.
+It works with `vagrant-libvirt`, and needs a little bit of tuning to get the
+job done.
+
+== Host Setup
+=== Requirements
+* *64* Gigs of RAM (default setup will use *58* Gigs for the VMs)
+* Fastest possible CPU
+* Fedora 29 (may work on other distro / versions but this is the only tested setup)
+* vagrant
+* vagrant-libvirt
+
+=== VMs DNS names and resolution
+
+You need to set the DNS name of your `vagrant-libvirt` bridge to *{okd_local_dns}*.
+
+```shell
+user@localhost $ sudo virsh net-edit vagrant-libvirt
+## add
+<domain name='{okd_local_dns}.local' localOnly='yes'/>
+```
+
+Then, restart the network with `virsh net-restart vagrant-libvirt` and you should be done.
+
+=== Optional: Host Resolution
+
+TODO: write the stuff for Fedora / NetworkManager / dnsmasq.d
+
+== VMs deployment
+By default, we deploy a number of VMs:
+
+* One deploy machine to run openshift-ansible
+* One openshift load-balancer
+* Three Openshift masters
+* Three Openshift inftrastructure nodes, with additional storage for Persistant Volumes
+* Three Openshift compute nodes.
+
+=== Storage setup
+
+By default, the `Vagrantfile` will deploy *3* infrastructure nodes with *3* extra disks of *150G*,
+you can override these defaults via the `OKD_EXTRA_DISKS_NUMBER` and `OKD_EXTRA_DISKS_SIZE` environment variables:
+
+```
+user@host $ OKD_EXTRA_DISKS_NUMBER=2 OKD_EXTRA_DISKS_SIZE=10G vagrant up
+```
+Since we will launch *11* virtual machines by default, vagrant can struggle to
+provision them all in parallel (my machine has no SSD), so the recommended way
+to deploy the VMs is to begin with the `deploy` machine and then use the provided
+`recycle-nodes.sh` script to bring the nodes one by one:
+
+```
+user@host $ vagrant up deploy
+user@host $ ./scripts/recycle-nodes.sh
+```
+== OKD Deployment
+
+Everything is done on the `deploy` VM, it is defined as the _primary_ VM for vagrant so
+you can use it easily with `vagrant ssh` without specifying the VM name.
+
+https://github.com/openshift/openshift-ansible[openshift-ansible] is cloned in `$HOME/okd-ansible`.
+The branch `release-{okd_version}` is already checked out and an inventory file is generated in `$HOME/okd-ansibe/hosts`.
+
+All you have to do in go to that directory and run the playbooks:
+
+```
+[vagrant@deploy ~]$ cd okd-ansible
+[vagrant@deploy okd-ansible]$ ansible-playbook -i hosts playbooks/prerequisites.yml
+[ ...output snipped...]
+[vagrant@deploy okd-ansible]$ ansible-playbook -i hosts playbooks/deploy_cluster.yml
+```

@@ -1,0 +1,2 @@
+- Configurable number of masters / infra / nodes (Vagrantfile + generated inventory)
+- Working deployment
