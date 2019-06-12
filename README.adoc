@@ -1,5 +1,5 @@
 = Vagrant OKD setup
-Clement Martin <onespan.com@onespan.com>
+Clement Martin <twisla@twis.la>
 v0.1
 :toc: left
 :numbered:
